@@ -1,14 +1,31 @@
 import sys
 import warnings
 
-from livebench.model.completions import chat_completion_openai, chat_completion_palm
-from livebench.model.model_adapter import BaseModelAdapter, PaLM2Adapter, get_model_adapter
-from livebench.model.models import (
-    AnthropicModel, AWSModel, CohereModel, DeepseekModel, GeminiModel,
-    GemmaModel, LlamaModel, MistralModel, Model, NvidiaModel, OpenAIModel,
-    QwenModel, XAIModel
+from livebench.model.completions import (
+    chat_completion_giga,
+    chat_completion_openai,
+    chat_completion_palm,
 )
-
+from livebench.model.model_adapter import (
+    BaseModelAdapter,
+    PaLM2Adapter,
+    get_model_adapter,
+)
+from livebench.model.models import (
+    AnthropicModel,
+    AWSModel,
+    CohereModel,
+    DeepseekModel,
+    GeminiModel,
+    GemmaModel,
+    LlamaModel,
+    MistralModel,
+    Model,
+    NvidiaModel,
+    OpenAIModel,
+    QwenModel,
+    XAIModel,
+)
 
 if sys.version_info >= (3, 9):
     from functools import cache
@@ -51,12 +68,12 @@ ANTHROPIC_MODELS = [
     AnthropicModel(
         api_name="claude-3-5-sonnet-20241022",
         display_name="claude-3-5-sonnet-20241022",
-        aliases=['claude-3-5-sonnet'],
+        aliases=["claude-3-5-sonnet"],
     ),
     AnthropicModel(
         api_name="claude-3-5-haiku-20241022",
         display_name="claude-3-5-haiku-20241022",
-        aliases=['claude-3-5-haiku'],
+        aliases=["claude-3-5-haiku"],
     ),
 ]
 
@@ -96,13 +113,15 @@ OPENAI_MODELS = [
     OpenAIModel(
         api_name="gpt-4o-mini-2024-07-18",
         display_name="gpt-4o-mini-2024-07-18",
-        aliases=['gpt-4o-mini'],
+        aliases=["gpt-4o-mini"],
     ),
     OpenAIModel(
         api_name="gpt-4o-2024-08-06", display_name="gpt-4o-2024-08-06", aliases=[]
     ),
     OpenAIModel(
-        api_name="chatgpt-4o-latest", display_name="chatgpt-4o-latest-2025-01-30", aliases=[]
+        api_name="chatgpt-4o-latest",
+        display_name="chatgpt-4o-latest-2025-01-30",
+        aliases=[],
     ),
 ]
 
@@ -122,38 +141,38 @@ INFERENCE_OPENAI_MODELS = [
     OpenAIModel(
         api_name="o1-2024-12-17",
         display_name="o1-2024-12-17-high",
-        aliases=['o1', 'o1-high', 'o1-2024-12-17'],
+        aliases=["o1", "o1-high", "o1-2024-12-17"],
         inference_api=True,
-        api_kwargs={'reasoning_effort': 'high'}
+        api_kwargs={"reasoning_effort": "high"},
     ),
     OpenAIModel(
         api_name="o1-2024-12-17",
         display_name="o1-2024-12-17-low",
-        aliases=['o1-low'],
+        aliases=["o1-low"],
         inference_api=True,
-        api_kwargs={'reasoning_effort': 'low'}
+        api_kwargs={"reasoning_effort": "low"},
     ),
     OpenAIModel(
-        api_name='o3-mini-2025-01-31',
-        display_name='o3-mini-2025-01-31-high',
-        aliases=['o3-mini-high', 'o3-mini', 'o3-mini-2025-01-31'],
+        api_name="o3-mini-2025-01-31",
+        display_name="o3-mini-2025-01-31-high",
+        aliases=["o3-mini-high", "o3-mini", "o3-mini-2025-01-31"],
         inference_api=True,
-        api_kwargs={'reasoning_effort': 'high'}
+        api_kwargs={"reasoning_effort": "high"},
     ),
     OpenAIModel(
-        api_name='o3-mini-2025-01-31',
-        display_name='o3-mini-2025-01-31-low',
-        aliases=['o3-mini-low'],
+        api_name="o3-mini-2025-01-31",
+        display_name="o3-mini-2025-01-31-low",
+        aliases=["o3-mini-low"],
         inference_api=True,
-        api_kwargs={'reasoning_effort': 'low'}
+        api_kwargs={"reasoning_effort": "low"},
     ),
     OpenAIModel(
-        api_name='o3-mini-2025-01-31',
-        display_name='o3-mini-2025-01-31-medium',
-        aliases=['o3-mini-medium'],
+        api_name="o3-mini-2025-01-31",
+        display_name="o3-mini-2025-01-31-medium",
+        aliases=["o3-mini-medium"],
         inference_api=True,
-        api_kwargs={'reasoning_effort': 'medium'}
-    )
+        api_kwargs={"reasoning_effort": "medium"},
+    ),
 ]
 
 # Together Models
@@ -191,7 +210,10 @@ TOGETHER_MODELS = [
     LlamaModel(
         api_name="Llama-3.1-Nemotron-70B-Instruct-HF",
         display_name="llama-3.1-nemotron-70b-instruct",
-        aliases=['llama-3.1-nemotron-70b-instruct', 'nvidia/llama-3.1-nemotron-70b-instruct'],
+        aliases=[
+            "llama-3.1-nemotron-70b-instruct",
+            "nvidia/llama-3.1-nemotron-70b-instruct",
+        ],
     ),
     GemmaModel(
         api_name="google/gemma-2-27b-it", display_name="gemma-2-27b-it", aliases=[]
@@ -254,14 +276,26 @@ GOOGLE_GENERATIVEAI_MODELS = [
         api_name="gemini-2.0-flash-thinking-exp-1219",
         display_name="gemini-2.0-flash-thinking-exp-1219",
         aliases=[],
-        api_kwargs={'max_output_tokens': 65536, 'temperature': 0.7, 'top_p': 0.95, 'top_k': 64, 'thinking_config': {'include_thoughts': True}}
+        api_kwargs={
+            "max_output_tokens": 65536,
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "top_k": 64,
+            "thinking_config": {"include_thoughts": True},
+        },
     ),
     GeminiModel(
         api_name="gemini-2.0-flash-thinking-exp-01-21",
         display_name="gemini-2.0-flash-thinking-exp-01-21",
-        aliases=['gemini-2.0-flash-thinking-exp'],
-        api_kwargs={'max_output_tokens': 65536, 'temperature': 0.7, 'top_p': 0.95, 'top_k': 64, 'thinking_config': {'include_thoughts': True}}
-    )
+        aliases=["gemini-2.0-flash-thinking-exp"],
+        api_kwargs={
+            "max_output_tokens": 65536,
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "top_k": 64,
+            "thinking_config": {"include_thoughts": True},
+        },
+    ),
 ]
 
 # Vertex Models
@@ -307,8 +341,10 @@ MISTRAL_MODELS = [
         api_name="mistral-small-2409", display_name="mistral-small-2409", aliases=[]
     ),
     MistralModel(
-        api_name="mistral-small-2501", display_name="mistral-small-2501", aliases=['mistral-small']
-    )
+        api_name="mistral-small-2501",
+        display_name="mistral-small-2501",
+        aliases=["mistral-small"],
+    ),
 ]
 
 # Cohere Models
@@ -335,7 +371,12 @@ COHERE_MODELS = [
 # Deepseek Models
 DEEPSEEK_MODELS = [
     DeepseekModel(api_name="deepseek-chat", display_name="deepseek-v3", aliases=[]),
-    DeepseekModel(api_name="deepseek-reasoner", display_name="deepseek-r1", aliases=[], reasoner=True)
+    DeepseekModel(
+        api_name="deepseek-reasoner",
+        display_name="deepseek-r1",
+        aliases=[],
+        reasoner=True,
+    ),
 ]
 
 # Nvidia Models
@@ -403,13 +444,20 @@ ALL_MODELS = (
 def get_model(name: str) -> Model:
     matches = []
     for model in ALL_MODELS:
-        if (
-            model.display_name.lower() == name.lower()
-            or any(alias.lower() == name.lower() for alias in model.aliases)
+        if model.display_name.lower() == name.lower() or any(
+            alias.lower() == name.lower() for alias in model.aliases
         ):
             matches.append(model)
     if len(matches) > 1:
         raise ValueError(f"Multiple models found for {name}")
+    elif "giga" in name.lower():
+        return Model(
+            api_name=name,
+            display_name=name,
+            aliases=[],
+            adapter=get_model_adapter(name),
+            api_function=chat_completion_giga,
+        )
     elif len(matches) == 0:
         # warnings.warn(f"No model found for {name}")
         return Model(
