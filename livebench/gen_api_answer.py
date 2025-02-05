@@ -5,26 +5,26 @@ python3 gen_api_answer.py --model gpt-3.5-turbo
 """
 
 import argparse
+import concurrent.futures
+import glob
 import json
 import os
 import time
-import concurrent.futures
-import glob
+
 import shortuuid
 import tqdm
 
 from livebench.common import (
+    LIVE_BENCH_DATA_SUPER_PATH,
     LIVE_BENCH_RELEASES,
-    reorg_answer_file,
+    filter_questions,
     get_categories_tasks,
     load_questions,
     load_questions_jsonl,
-    LIVE_BENCH_DATA_SUPER_PATH,
-    filter_questions
+    reorg_answer_file,
 )
-from livebench.model.completions import chat_completion_openai
-
 from livebench.model import Model, get_model
+from livebench.model.completions import chat_completion_openai
 
 
 def get_answer(
@@ -156,7 +156,8 @@ def run_questions(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate benchmark question answers using an API-based model"
+        description="Generate benchmark question answers using an API-based model",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--bench-name",
@@ -221,7 +222,7 @@ if __name__ == "__main__":
         "--resume",
         action="store_true",
         default=False,
-        help="Do not generate answers for questions that have already been generated, unless they were errors and --retry-failures is set."
+        help="Do not generate answers for questions that have already been generated, unless they were errors and --retry-failures is set.",
     )
     parser.add_argument(
         "--model-display-name",
@@ -273,10 +274,10 @@ if __name__ == "__main__":
                     release_set,
                     args.livebench_release_option,
                     task_name,
-                    args.question_id
+                    args.question_id,
                 )
 
-                questions = questions[args.question_begin:args.question_end]
+                questions = questions[args.question_begin : args.question_end]
 
                 task_full_name = (
                     f"{LIVE_BENCH_DATA_SUPER_PATH}/{category_name}/{task_name}"
@@ -285,7 +286,9 @@ if __name__ == "__main__":
                     f"data/{task_full_name}/model_answer/{model.display_name}.jsonl"
                 )
 
-                questions = filter_questions(questions, answer_file, args.resume, args.retry_failures)
+                questions = filter_questions(
+                    questions, answer_file, args.resume, args.retry_failures
+                )
 
                 print(f"Questions from {task_full_name}")
                 print(f"Output to {answer_file}")
@@ -317,16 +320,21 @@ if __name__ == "__main__":
         for question_file in list_of_question_files:
             print(question_file)
             questions = load_questions_jsonl(
-                question_file, release_set, args.livebench_release_option, args.question_id
+                question_file,
+                release_set,
+                args.livebench_release_option,
+                args.question_id,
             )
-            
-            questions = questions[args.question_begin:args.question_end]
+
+            questions = questions[args.question_begin : args.question_end]
 
             bench_name = os.path.dirname(question_file).replace("data/", "")
             answer_file = f"data/{bench_name}/model_answer/{model.display_name}.jsonl"
 
-            questions = filter_questions(questions, answer_file, args.resume, args.retry_failures)
-                    
+            questions = filter_questions(
+                questions, answer_file, args.resume, args.retry_failures
+            )
+
             print(f"Questions from {question_file}")
             print(f"Output to {answer_file}")
 
