@@ -1,0 +1,16 @@
+display_name: giga
+api_name:
+  giga: giga
+default_provider: giga
+aliases: [gigachat]
+api_kwargs:
+  giga: {}
+agent_config:
+  giga:
+    litellm_provider: giga
+    max_input_tokens: 32768
+    max_output_tokens: 4096
+    supports_function_calling: false
+    api_type: completion
+    convert_system_to_user: false
+    include_thinking_in_history: false
