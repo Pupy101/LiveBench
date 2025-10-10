@@ -7,10 +7,6 @@ import os
 import re
 import sys
 from typing import Dict, List, Optional
-<<<<<<< HEAD
-import warnings
-=======
->>>>>>> a680305 (Add giga)
 
 if sys.version_info >= (3, 9):
     from functools import cache
@@ -39,42 +35,11 @@ from fastchat.model.model_chatglm import generate_stream_chatglm
 from fastchat.model.model_codet5p import generate_stream_codet5p
 from fastchat.model.model_falcon import generate_stream_falcon
 from fastchat.model.model_yuan2 import generate_stream_yuan2
-<<<<<<< HEAD
-from fastchat.model.monkey_patch_non_inplace import \
-    replace_llama_attn_with_non_inplace_operations
-=======
-from fastchat.model.monkey_patch_non_inplace import (
-    replace_llama_attn_with_non_inplace_operations,
-)
->>>>>>> a680305 (Add giga)
 from fastchat.modules.awq import AWQConfig, load_awq_quantized
 from fastchat.modules.exllama import ExllamaConfig, load_exllama_model
 from fastchat.modules.gptq import GptqConfig, load_gptq_quantized
 from fastchat.modules.xfastertransformer import XftConfig, load_xft_model
 from fastchat.utils import get_gpu_memory
-<<<<<<< HEAD
-from livebench.conversation import Conversation, get_conv_template
-from transformers import (AutoConfig, AutoModel, AutoModelForCausalLM,
-                          AutoModelForSeq2SeqLM, AutoTokenizer,
-                          LlamaForCausalLM, LlamaTokenizer, T5Tokenizer)
-
-#from fastchat.model.model_cllm import generate_stream_cllm
-=======
-from transformers import (
-    AutoConfig,
-    AutoModel,
-    AutoModelForCausalLM,
-    AutoModelForSeq2SeqLM,
-    AutoTokenizer,
-    LlamaForCausalLM,
-    LlamaTokenizer,
-    T5Tokenizer,
-)
-
-from livebench.conversation import Conversation, get_conv_template
-
-# from fastchat.model.model_cllm import generate_stream_cllm
->>>>>>> a680305 (Add giga)
 
 from fastchat.model.monkey_patch_non_inplace import (
     replace_llama_attn_with_non_inplace_operations,
@@ -285,6 +250,10 @@ def register_model_adapter(cls):
 @cache
 def get_model_adapter(model_path: str) -> BaseModelAdapter:
     """Get the suitable model adapter for a model specified by model_path."""
+    # Special handling for GigaChat models
+    if "giga" in model_path.lower():
+        return BaseModelAdapter()
+    
     model_path_basename = os.path.basename(os.path.normpath(model_path))
 
     # Try the basename of model_path at first
@@ -1248,33 +1217,6 @@ class ChatGPTAdapter(BaseModelAdapter):
 
     def match(self, model_path: str):
         return (
-<<<<<<< HEAD
-            model_path in OPENAI_MODEL_LIST or
-            model_path in INFERENCE_OPENAI_MODEL_LIST or
-            model_path.startswith('perplexity-') or
-            model_path.startswith('grok-') or
-            model_path.startswith('amazon.')
-        )
-=======
-            model_path in OPENAI_MODEL_LIST
-            or model_path in INFERENCE_OPENAI_MODEL_LIST
-            or model_path in XAI_MODEL_LIST
-            or model_path in AWS_MODEL_LIST
-        )
-
-    def load_model(self, model_path: str, from_pretrained_kwargs: dict):
-        raise NotImplementedError()
-
-    def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("chatgpt")
-
-
-class GigaAdapter(BaseModelAdapter):
-    """The model adapter for Giga"""
-
-    def match(self, model_path: str):
-        return "giga" in model_path.lower()
->>>>>>> a680305 (Add giga)
 
     def load_model(self, model_path: str, from_pretrained_kwargs: dict):
         raise NotImplementedError()
@@ -1744,22 +1686,6 @@ class Llama3Adapter(BaseModelAdapter):
         return get_conv_template("llama-3")
 
 
-<<<<<<< HEAD
-class Llama4Adapter(BaseModelAdapter):
-    """The model adapter for Llama-3 (e.g., meta-llama/llama-4-maverick-17b-128e-instruct-FP8)"""
-
-    def match(self, model_path: str):
-        return "llama-4" in model_path.lower()
-
-    def load_model(self, model_path: str, from_pretrained_kwargs: dict):
-        raise NotImplementedError()
-
-    def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("chatgpt")
-
-
-=======
->>>>>>> a680305 (Add giga)
 class CuteGPTAdapter(BaseModelAdapter):
     """The model adapter for CuteGPT"""
 
