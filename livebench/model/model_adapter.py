@@ -21,9 +21,7 @@ from fastchat.model.compression import load_compress_model
 from fastchat.model.llama_condense_monkey_patch import replace_llama_with_condense
 from fastchat.model.model_chatglm import generate_stream_chatglm
 from fastchat.model.model_codet5p import generate_stream_codet5p
-from fastchat.model.model_exllama import generate_stream_exllama
 from fastchat.model.model_falcon import generate_stream_falcon
-from fastchat.model.model_xfastertransformer import generate_stream_xft
 from fastchat.model.model_yuan2 import generate_stream_yuan2
 from fastchat.model.monkey_patch_non_inplace import (
     replace_llama_attn_with_non_inplace_operations,
@@ -1215,8 +1213,9 @@ class ChatGPTAdapter(BaseModelAdapter):
         return (
             model_path in OPENAI_MODEL_LIST
             or model_path in INFERENCE_OPENAI_MODEL_LIST
-            or model_path in XAI_MODEL_LIST
-            or model_path in AWS_MODEL_LIST
+            or model_path.startswith("perplexity-")
+            or model_path.startswith("grok-")
+            or model_path.startswith("amazon.")
         )
 
     def load_model(self, model_path: str, from_pretrained_kwargs: dict):
@@ -1698,6 +1697,19 @@ class Llama3Adapter(BaseModelAdapter):
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("llama-3")
+
+
+class Llama4Adapter(BaseModelAdapter):
+    """The model adapter for Llama-3 (e.g., meta-llama/llama-4-maverick-17b-128e-instruct-FP8)"""
+
+    def match(self, model_path: str):
+        return "llama-4" in model_path.lower()
+
+    def load_model(self, model_path: str, from_pretrained_kwargs: dict):
+        raise NotImplementedError()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("chatgpt")
 
 
 class CuteGPTAdapter(BaseModelAdapter):

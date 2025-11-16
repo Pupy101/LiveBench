@@ -1,5 +1,24 @@
 ## Changelog
 
+### 2025-10-03
+Switched the agent used for agentic coding to [Mini-SWE-Agent](https://mini-swe-agent.com/latest/) instead of SWE-Agent due to its simpler design, consistent interface with all models, and easier maintainability. Additionally, we updated the step limit to 250 rather than 50. The agentic coding tasks were rerun for all models with these changes and the existing 2025-05-30 leaderboard was updated with the new results.
+
+### 2025-05-30
+This update introduces a new agentic coding category, where models must operate in a multi-turn, realistic development environment to resolve issues from real Github repositories. It contains Python, JavaScript, and TypeScript tasks, and we plan to add more tasks and languages in the future. Inference is performed using the [SWE-Agent](https://swe-agent.com) framework, and evaluation uses the [Multi-SWE-Bench](https://multi-swe-bench.github.io/#/) harness. This task provides the most realistic possible evaluation of LLM coding capabilities and prediction of which will be most useful for developers.
+
+Note: SWE-Agent was run with a 50-step limit for all models during this evaluation. In some cases, it's likely that scores would have improved were models given more time to complete the tasks.
+
+### 2025-04-25
+ - Completely new coding questions focused on evaluating usage of real-world libraries in realistic scenarios. Questions are no longer sourced from LiveCodeBench. The tasks themselves are the same; we still have a full code generation task and a code completion task.
+ - Refeshed data analysis tasks, specifically for the tablejoin and tablereformat tasks. The cta task has been retired.
+
+### 2025-04-02
+ - Refreshed coding questions (coding_completion and LCB_generation) with *much* newer questions from LiveCodeBench. The previous questions were likely heavily contaminated for newer models. LiveCodeBench also increases question difficulty over time.
+ - Refreshed typos and plot_unscrambling questions with newer ArXiv papers and movie plots from Wikipedia, respectively. Issues in the typos question generation script were also fixed, so that all questions can be fairly evaluated
+ - Replaced 2023 AMC questions with 2024 AMC questions in math_comp
+ - Updated web_of_lies with a mix of harder questions of the previous web_of_lies_v2 format and the new format from [BIG-Bench Extra Hard](https://github.com/google-deepmind/bbeh)
+ - All new questions ask for answers in the `<solution></solution>` format.
+
 ### 2024-11-25
 This update focused on refreshing questions to check for contamination and increasing the difficulty of tasks for which o1 (and other reasoning models) achieved very high scores.
  - Refreshed the instruction following tasks with new articles from The Guardian
@@ -7,7 +26,7 @@ This update focused on refreshing questions to check for contamination and incre
  - Refreshed Connections task with new puzzles from NYT
  - Updated Connections generation to more frequently ask for more groups
  - Regenerated Zebra Puzzles, skewing towards larger board sizes and more complex constraints
- - Updated Connections and Zebra Puzzles questions to require answers to be in `<solution><\solution>` tags rather than bolded
+ - Updated Connections and Zebra Puzzles questions to require answers to be in `<solution></solution>` tags rather than bolded
 
 ### 2024-08-31
 

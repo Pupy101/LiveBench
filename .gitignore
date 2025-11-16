@@ -29,8 +29,21 @@ output
 *.pkl
 *.csv
 
+*~
+
 # Build
 build
 
 
 data
+
+core
+
+.env
+
+livebench/answer_inspections
+livebench/question_edit
+
+trajectories
+
+prompts.txt

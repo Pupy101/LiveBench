@@ -2,17 +2,56 @@
 Common data structures and utilities.
 """
 
+
 import dataclasses
-from datasets import load_dataset, Dataset
+
 from datetime import datetime
 import glob
 import json
 import os
+import subprocess
 
+from pathlib import Path
 import re
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from livebench.model.api_models import get_model
+from livebench.model.api_model_config import get_model_config
+
+from dotenv import load_dotenv
+
+from rich.traceback import install
+install()
+
+load_dotenv(override=True)
+
+if TYPE_CHECKING:
+    from datasets import Dataset
+
+
+def check_agentic_coding_requirements():
+    """Check if litellm and Docker are available for agentic coding evaluation.
+
+    Returns:
+        bool: True if all requirements are met, False otherwise
+    """
+    # Check for litellm
+    try:
+        import litellm
+        litellm_available = True
+    except ImportError:
+        litellm_available = False
+
+    # Check for Docker
+    try:
+        result = subprocess.run(['docker', '--version'], capture_output=True, text=True, check=True)
+        docker_available = True
+    except Exception:
+        docker_available = False
+
+    if not litellm_available or not docker_available:
+        return False
+
+    return True
 
 
 # Extract scores from judgments
@@ -32,7 +71,9 @@ LIVE_BENCH_CATEGORIES = [
     "reasoning",
     "language",
 ]
-LIVE_BENCH_RELEASES = {"2024-07-26", "2024-06-24", "2024-08-31", "2024-11-25"}
+LIVE_BENCH_RELEASES = {"2024-07-26", "2024-06-24", "2024-08-31", "2024-11-25", "2025-04-02", "2025-04-25", "2025-05-30"}
+
+LIVE_BENCH_ROOT_PATH = Path(__file__).parent
 
 
 @dataclasses.dataclass
@@ -80,7 +121,7 @@ def get_categories_tasks(bench_name: str):
 
     else:
         # specify a category or task
-        category_name = split_bench_name[1]
+        category_name = split_bench_name[1].split('_')[0]
 
         categories = {category_name: get_hf_dataset(category_name)}
 
@@ -97,10 +138,11 @@ def get_categories_tasks(bench_name: str):
 
 def get_hf_dataset(dataset_name: str, split="test"):
     """Load a dataset from HuggingFace using the given split."""
+    from datasets import load_dataset
     return load_dataset(f"{LIVE_BENCH_HF_ORGANIZATION}/{dataset_name}", split=split)
 
 
-def get_tasks_from_hf_category(category: Dataset):
+def get_tasks_from_hf_category(category: 'Dataset'):
     """Retrieve the set of task names for a category."""
     return list(set(category["task"]))
 
@@ -133,7 +175,7 @@ def load_answers_judgments():
 
 
 def load_questions(
-    category: Dataset,
+    category: 'Dataset',
     livebench_releases: set = LIVE_BENCH_RELEASES,
     livebench_release: Optional[str] = None,
     task_name: Optional[str] = None,
@@ -156,6 +198,7 @@ def load_questions(
         ]
     else:
         questions = list(category)
+    assert len(questions) == len(set(q['question_id'] for q in questions)), "Duplicate question IDs found"
     for q in questions:
         if "livebench_release_date" in q.keys() and isinstance(
             q["livebench_release_date"], datetime
@@ -214,6 +257,8 @@ def load_questions_jsonl(
             if line:
                 questions.append(json.loads(line))
 
+    assert len(questions) == len(set(q['question_id'] for q in questions)), "Duplicate question IDs found in question file " + question_file
+
     questions = [
         q for q in questions if q["livebench_release_date"] in livebench_releases
     ]
@@ -221,12 +266,42 @@ def load_questions_jsonl(
         questions = [
             q for q in questions if q['livebench_removal_date'] == "" or q['livebench_removal_date'] > livebench_release
         ]
+        
     if question_ids is not None:
-        questions = [q for q in questions if q['question_id'] in question_ids]
+        questions = [q for q in questions if str(q['question_id']) in question_ids]
+    return questions
+
+def load_test_cases_jsonl(question_file_path: str, questions: list[dict]):
+    """
+    Load test cases from a jsonl file in the same directory as the question file.
+    """
+    question_folder = os.path.dirname(question_file_path)
+
+    # find all files of the form test_cases_<index>.jsonl and load them in order
+    test_cases = {}
+    test_cases_files = glob.glob(os.path.join(question_folder, "test_cases_*.jsonl"))
+    test_cases_files.sort()
+    for test_cases_file in test_cases_files:
+        print('loading test cases from', test_cases_file)
+        with open(test_cases_file, "r") as test_cases_file:
+            for line in test_cases_file:
+                test_case = json.loads(line)
+                question_id = test_case["question_id"]
+                test_cases[question_id] = test_case
+
+    if len(test_cases.keys()) > 0:
+        for question in questions:
+            if question['question_id'] in test_cases:
+                if any(key in question for key in test_cases[question['question_id']].keys() if key != "question_id"):
+                    print(f"Warning: Question {question['question_id']} already has keys {', '.join(key for key in test_cases[question['question_id']].keys() if key in question and key != 'question_id')}")
+                else:
+                    question.update(test_cases[question['question_id']])
+            else:
+                print(f"Warning: Question {question['question_id']} has no test cases")
     return questions
 
 
-def load_model_answers(answer_dir: str):
+def load_model_answers(answer_dir: str, models: list[str] | None = None):
     """Load model answers from answer_dir.
 
     The return value is a python dict of type:
@@ -241,12 +316,17 @@ def load_model_answers(answer_dir: str):
 
     for filename in filenames:
         model_name = os.path.basename(filename)[: -len(".jsonl")]
-        model_name = get_model(model_name).display_name.lower()
+        model_name = get_model_config(model_name).display_name.lower()
+        if models is not None and model_name not in models:
+            continue
         answer = {}
         with open(filename) as fin:
-            for line in fin:
-                line = json.loads(line)
-                answer[line["question_id"]] = line
+            for i, line in enumerate(fin):
+                try:
+                    line = json.loads(line)
+                    answer[line["question_id"]] = line
+                except Exception as e:
+                    raise ValueError(f"Error loading line {i + 1} ({line}) from {filename}: {e}") from e
         model_answers[model_name] = answer
 
     return model_answers
@@ -365,18 +445,41 @@ def get_model_list(answer_dir):
     
 
 def filter_questions(questions, answer_file, resume=False, retry_failures=False):
+    """
+    Filter questions based on the ones for which there are already answers in the answer_file.
+    If resume is true, include only unanswered questions.
+    If retry_failures is true, include questions for which the existing answer is an error.
+    """
     from livebench.model.completions import API_ERROR_OUTPUT
     reorg_answer_file(answer_file)
     new_questions_ids = set([q["question_id"] for q in questions])
+    
+    # First check if the exact file exists
+    if not os.path.exists(answer_file):
+        # If not, try to find a case-insensitive match
+        answer_dir = os.path.dirname(answer_file)
+        if not os.path.exists(answer_dir):
+            Path(answer_dir).mkdir(parents=True, exist_ok=True)
+        answer_basename = os.path.basename(answer_file)
+        if answer_dir:
+            dir_files = os.listdir(answer_dir)
+        else:
+            dir_files = os.listdir('.')
+        
+        for file in dir_files:
+            if file.lower() == answer_basename.lower() and file != answer_basename:
+                answer_file = os.path.join(answer_dir if answer_dir else '.', file)
+                break
+    
     if not os.path.exists(answer_file):
         return questions
     with open(answer_file, "r") as fin:
         for line in fin:
             ans = json.loads(line)
             qid = ans["question_id"]
-            error = ans["choices"][0]["turns"][0] == API_ERROR_OUTPUT
+            error = ans["choices"][0]["turns"][0] == API_ERROR_OUTPUT or ans['choices'][0]['turns'] == API_ERROR_OUTPUT
             if qid in new_questions_ids and (resume or retry_failures) and not error:
                 new_questions_ids.remove(qid)
-            elif qid in new_questions_ids and error and not retry_failures:
+            elif qid in new_questions_ids and error and resume and not retry_failures:
                 new_questions_ids.remove(qid)
     return sorted([q for q in questions if q["question_id"] in new_questions_ids], key=lambda x: x["question_id"])
