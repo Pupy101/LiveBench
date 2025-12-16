@@ -26,7 +26,8 @@ from livebench.common import (
     load_questions_jsonl,
     LIVE_BENCH_DATA_SUPER_PATH,
     filter_questions,
-    check_agentic_coding_requirements
+    check_agentic_coding_requirements,
+    reorg_answer_file
 )
 
 from livebench.model import ModelConfig, get_model_config, get_api_function
