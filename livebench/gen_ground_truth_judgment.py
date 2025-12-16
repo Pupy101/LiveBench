@@ -580,6 +580,18 @@ if __name__ == "__main__":
         "--only-incorrect", action="store_true", default=False,
         help="When used with --resume, only re-evaluate questions that previously scored 0. Requires --resume to be enabled."
     )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        default=None,
+        help="Path to output judgment file. If not provided, will use default location: data/{bench_name}/model_judgment/ground_truth_judgment.jsonl",
+    )
+    parser.add_argument(
+        "--answer-file",
+        type=str,
+        default=None,
+        help="Path to directory containing model answer files. If not provided, will use default location: data/{bench_name}/model_answer/",
+    )
     args = parser.parse_args()
 
     if args.livebench_release_option not in LIVE_BENCH_RELEASES:
