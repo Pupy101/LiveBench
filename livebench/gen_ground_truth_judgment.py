@@ -303,7 +303,7 @@ def gen_judgments(
     else:
         models = model_list
 
-    models = [get_model_config(m).display_name for m in models]
+    models = [get_model_config(m).display_name.lower() for m in models]
 
     print('models:', models)
 
