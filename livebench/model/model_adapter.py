@@ -547,7 +547,7 @@ def get_conversation_template(model_path: str) -> Conversation:
     return adapter.get_default_conv_template(model_path)
 
 
-def get_generate_stream_function(model: Any, model_path: str):  # torch.nn.Module when available
+def get_generate_stream_function(model: Any, model_path: str):
     """Get the generate_stream function for inference."""
     if not _LOCAL_MODELS_AVAILABLE:
         raise ImportError(
