@@ -4,7 +4,6 @@ import warnings
 from livebench.model.completions import (
     chat_completion_giga,
     chat_completion_openai,
-    chat_completion_palm,
 )
 from livebench.model.model_adapter import (
     BaseModelAdapter,
