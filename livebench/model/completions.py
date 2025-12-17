@@ -631,8 +631,6 @@ def chat_completion_giga(model: str, messages: Conversation, temperature: float,
     with _GIGA_LOCK:
         if _GIGA_CLIENT is None:
             if not os.environ.get('GIGA_CREDENTIALS'):
-            
-            if not os.environ.get('GIGA_CREDENTIALS'):
                 logger.error("GIGA_CREDENTIALS not found in environment after loading!")
                 logger.error(f"Current working directory: {os.getcwd()}")
                 raise ValueError("GIGA_CREDENTIALS environment variable is required but not found")
@@ -640,21 +638,12 @@ def chat_completion_giga(model: str, messages: Conversation, temperature: float,
             logger.info(f"Creating global GigaChat client (singleton)...")
             _GIGA_CLIENT = GigaChat()
             logger.info(f"GigaChat client created successfully")
-    
     client = _GIGA_CLIENT
-    
-    actual_temperature = temperature
-    top_p = 0.95
-    if temperature == 0:
-        actual_temperature = 1
-        top_p = 0
-    
     kwargs = {
         'model': model,
         'messages': messages,
-        'temperature': actual_temperature,
+        'temperature': temperature,
         'max_tokens': max_tokens,
-        'top_p': top_p,
     }
     
     if model_api_kwargs:
