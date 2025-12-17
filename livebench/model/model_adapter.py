@@ -336,13 +336,13 @@ def load_model(
     device: str = "cuda",
     num_gpus: int = 1,
     max_gpu_memory: Optional[str] = None,
-    dtype: Optional[Any] = None,  # torch.dtype when available
+    dtype: Optional[Any] = None,
     load_8bit: bool = False,
     cpu_offloading: bool = False,
-    gptq_config: Optional[Any] = None,  # GptqConfig when available
-    awq_config: Optional[Any] = None,  # AWQConfig when available
-    exllama_config: Optional[Any] = None,  # ExllamaConfig when available
-    xft_config: Optional[Any] = None,  # XftConfig when available
+    gptq_config: Optional[Any] = None,
+    awq_config: Optional[Any] = None,
+    exllama_config: Optional[Any] = None,
+    xft_config: Optional[Any] = None,
     revision: str = "main",
     debug: bool = False,
 ):
