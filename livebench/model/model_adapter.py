@@ -45,7 +45,6 @@ try:
     )
     _LOCAL_MODELS_AVAILABLE = True
 except ImportError:
-    # Local model dependencies not installed - API-only mode
     _LOCAL_MODELS_AVAILABLE = False
     torch = None
     CPU_ISA = None
