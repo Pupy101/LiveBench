@@ -120,8 +120,7 @@ def get_categories_tasks(bench_name: str):
         }
 
     else:
-        # specify a category or task
-        category_name = split_bench_name[1]  # Use full category name (e.g., 'data_analysis')
+        category_name = split_bench_name[1]
 
         categories = {category_name: get_hf_dataset(category_name)}
 
