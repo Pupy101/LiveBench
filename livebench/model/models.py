@@ -1,8 +1,3 @@
-"""
-Model definitions for LiveBench API models.
-This file was missing from the original repository and has been recreated.
-"""
-
 from typing import List, Optional, Dict, Any
 
 
