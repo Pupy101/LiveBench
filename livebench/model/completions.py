@@ -625,7 +625,6 @@ def chat_completion_deepinfra(model: str, messages: Conversation, temperature: f
     retry_error_callback=retry_fail,
 )
 def chat_completion_giga(model: str, messages: Conversation, temperature: float, max_tokens: int, model_api_kwargs: API_Kwargs | None = None, api_dict: dict[str, str] | None = None, stream: bool = False) -> tuple[str, int]:
-    """GigaChat completion using the giga package (lightweight-gigachat)"""
     global _GIGA_CLIENT
     
     with _GIGA_LOCK:
