@@ -627,14 +627,9 @@ def chat_completion_deepinfra(model: str, messages: Conversation, temperature: f
 def chat_completion_giga(model: str, messages: Conversation, temperature: float, max_tokens: int, model_api_kwargs: API_Kwargs | None = None, api_dict: dict[str, str] | None = None, stream: bool = False) -> tuple[str, int]:
     """GigaChat completion using the giga package (lightweight-gigachat)"""
     global _GIGA_CLIENT
-    
+
     with _GIGA_LOCK:
         if _GIGA_CLIENT is None:
-            if not os.environ.get('GIGA_CREDENTIALS'):
-                logger.error("GIGA_CREDENTIALS not found in environment after loading!")
-                logger.error(f"Current working directory: {os.getcwd()}")
-                raise ValueError("GIGA_CREDENTIALS environment variable is required but not found")
-            
             logger.info(f"Creating global GigaChat client (singleton)...")
             _GIGA_CLIENT = GigaChat()
             logger.info(f"GigaChat client created successfully")
@@ -645,15 +640,15 @@ def chat_completion_giga(model: str, messages: Conversation, temperature: float,
         'temperature': temperature,
         'max_tokens': max_tokens,
     }
-    
+
     if model_api_kwargs:
         kwargs.update(model_api_kwargs)
-    
+
     response = client.chat(**kwargs)
-    
+
     content = response['choices'][0]['message']['content']
     num_tokens = response.get('usage', {}).get('completion_tokens', len(content.split()))
-    
+
     return content, num_tokens
 
 def get_api_function(provider_name: str) -> ModelAPI:
