@@ -16,7 +16,6 @@ else:
 
 import psutil
 
-# Optional imports for local model deployment
 try:
     import torch
     from fastchat.constants import CPU_ISA
@@ -46,7 +45,6 @@ try:
     )
     _LOCAL_MODELS_AVAILABLE = True
 except ImportError:
-    # Local model dependencies not installed - API-only mode
     _LOCAL_MODELS_AVAILABLE = False
     torch = None
     CPU_ISA = None
@@ -336,13 +334,13 @@ def load_model(
     device: str = "cuda",
     num_gpus: int = 1,
     max_gpu_memory: Optional[str] = None,
-    dtype: Optional[Any] = None,  # torch.dtype when available
+    dtype: Optional[Any] = None,
     load_8bit: bool = False,
     cpu_offloading: bool = False,
-    gptq_config: Optional[Any] = None,  # GptqConfig when available
-    awq_config: Optional[Any] = None,  # AWQConfig when available
-    exllama_config: Optional[Any] = None,  # ExllamaConfig when available
-    xft_config: Optional[Any] = None,  # XftConfig when available
+    gptq_config: Optional[Any] = None,
+    awq_config: Optional[Any] = None,
+    exllama_config: Optional[Any] = None,
+    xft_config: Optional[Any] = None,
     revision: str = "main",
     debug: bool = False,
 ):
@@ -547,7 +545,7 @@ def get_conversation_template(model_path: str) -> Conversation:
     return adapter.get_default_conv_template(model_path)
 
 
-def get_generate_stream_function(model: Any, model_path: str):  # torch.nn.Module when available
+def get_generate_stream_function(model: Any, model_path: str):
     """Get the generate_stream function for inference."""
     if not _LOCAL_MODELS_AVAILABLE:
         raise ImportError(
