@@ -7,7 +7,7 @@ import os
 import re
 import sys
 import warnings
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 if sys.version_info >= (3, 9):
     from functools import cache
@@ -15,32 +15,63 @@ else:
     from functools import lru_cache as cache
 
 import psutil
-import torch
-from fastchat.constants import CPU_ISA
-from fastchat.model.compression import load_compress_model
-from fastchat.model.llama_condense_monkey_patch import replace_llama_with_condense
-from fastchat.model.model_chatglm import generate_stream_chatglm
-from fastchat.model.model_codet5p import generate_stream_codet5p
-from fastchat.model.model_falcon import generate_stream_falcon
-from fastchat.model.model_yuan2 import generate_stream_yuan2
-from fastchat.model.monkey_patch_non_inplace import (
-    replace_llama_attn_with_non_inplace_operations,
-)
-from fastchat.modules.awq import AWQConfig, load_awq_quantized
-from fastchat.modules.exllama import ExllamaConfig, load_exllama_model
-from fastchat.modules.gptq import GptqConfig, load_gptq_quantized
-from fastchat.modules.xfastertransformer import XftConfig, load_xft_model
-from fastchat.utils import get_gpu_memory
-from transformers import (
-    AutoConfig,
-    AutoModel,
-    AutoModelForCausalLM,
-    AutoModelForSeq2SeqLM,
-    AutoTokenizer,
-    LlamaForCausalLM,
-    LlamaTokenizer,
-    T5Tokenizer,
-)
+
+try:
+    import torch
+    from fastchat.constants import CPU_ISA
+    from fastchat.model.compression import load_compress_model
+    from fastchat.model.llama_condense_monkey_patch import replace_llama_with_condense
+    from fastchat.model.model_chatglm import generate_stream_chatglm
+    from fastchat.model.model_codet5p import generate_stream_codet5p
+    from fastchat.model.model_falcon import generate_stream_falcon
+    from fastchat.model.model_yuan2 import generate_stream_yuan2
+    from fastchat.model.monkey_patch_non_inplace import (
+        replace_llama_attn_with_non_inplace_operations,
+    )
+    from fastchat.modules.awq import AWQConfig, load_awq_quantized
+    from fastchat.modules.exllama import ExllamaConfig, load_exllama_model
+    from fastchat.modules.gptq import GptqConfig, load_gptq_quantized
+    from fastchat.modules.xfastertransformer import XftConfig, load_xft_model
+    from fastchat.utils import get_gpu_memory
+    from transformers import (
+        AutoConfig,
+        AutoModel,
+        AutoModelForCausalLM,
+        AutoModelForSeq2SeqLM,
+        AutoTokenizer,
+        LlamaForCausalLM,
+        LlamaTokenizer,
+        T5Tokenizer,
+    )
+    _LOCAL_MODELS_AVAILABLE = True
+except ImportError:
+    _LOCAL_MODELS_AVAILABLE = False
+    torch = None
+    CPU_ISA = None
+    load_compress_model = None
+    replace_llama_with_condense = None
+    generate_stream_chatglm = None
+    generate_stream_codet5p = None
+    generate_stream_falcon = None
+    generate_stream_yuan2 = None
+    replace_llama_attn_with_non_inplace_operations = None
+    AWQConfig = None
+    load_awq_quantized = None
+    ExllamaConfig = None
+    load_exllama_model = None
+    GptqConfig = None
+    load_gptq_quantized = None
+    XftConfig = None
+    load_xft_model = None
+    get_gpu_memory = None
+    AutoConfig = None
+    AutoModel = None
+    AutoModelForCausalLM = None
+    AutoModelForSeq2SeqLM = None
+    AutoTokenizer = None
+    LlamaForCausalLM = None
+    LlamaTokenizer = None
+    T5Tokenizer = None
 
 from livebench.conversation import Conversation, get_conv_template
 
@@ -191,6 +222,11 @@ class BaseModelAdapter:
             model_path: The ID of the model on the HuggingFace repo, or the path to locally-stored model weights
             from_pretrained_kwargs: Keyword arguments for the model loader
         """
+        if not _LOCAL_MODELS_AVAILABLE:
+            raise ImportError(
+                "Local model dependencies (torch, transformers, fastchat) are not installed. "
+                "Install them with: pip install livebench[local-models]"
+            )
         revision = from_pretrained_kwargs.get("revision", "main")
         try:
             tokenizer = AutoTokenizer.from_pretrained(
@@ -221,6 +257,11 @@ class BaseModelAdapter:
         return model, tokenizer
 
     def load_compress_model(self, model_path, device, torch_dtype, revision="main"):
+        if not _LOCAL_MODELS_AVAILABLE:
+            raise ImportError(
+                "Local model dependencies (torch, transformers, fastchat) are not installed. "
+                "Install them with: pip install livebench[local-models]"
+            )
         return load_compress_model(
             model_path,
             device,
@@ -293,17 +334,22 @@ def load_model(
     device: str = "cuda",
     num_gpus: int = 1,
     max_gpu_memory: Optional[str] = None,
-    dtype: Optional[torch.dtype] = None,
+    dtype: Optional[Any] = None,
     load_8bit: bool = False,
     cpu_offloading: bool = False,
-    gptq_config: Optional[GptqConfig] = None,
-    awq_config: Optional[AWQConfig] = None,
-    exllama_config: Optional[ExllamaConfig] = None,
-    xft_config: Optional[XftConfig] = None,
+    gptq_config: Optional[Any] = None,
+    awq_config: Optional[Any] = None,
+    exllama_config: Optional[Any] = None,
+    xft_config: Optional[Any] = None,
     revision: str = "main",
     debug: bool = False,
 ):
     """Load a model from Hugging Face."""
+    if not _LOCAL_MODELS_AVAILABLE:
+        raise ImportError(
+            "Local model dependencies (torch, transformers, fastchat) are not installed. "
+            "Install them with: pip install livebench[local-models]"
+        )
     import accelerate
 
     # get model adapter
@@ -499,8 +545,13 @@ def get_conversation_template(model_path: str) -> Conversation:
     return adapter.get_default_conv_template(model_path)
 
 
-def get_generate_stream_function(model: torch.nn.Module, model_path: str):
+def get_generate_stream_function(model: Any, model_path: str):
     """Get the generate_stream function for inference."""
+    if not _LOCAL_MODELS_AVAILABLE:
+        raise ImportError(
+            "Local model dependencies (torch, transformers, fastchat) are not installed. "
+            "Install them with: pip install livebench[local-models]"
+        )
     from fastchat.serve.inference import generate_stream
 
     model_type = str(type(model)).lower()
@@ -532,6 +583,11 @@ def get_generate_stream_function(model: torch.nn.Module, model_path: str):
         # Return a curried stream function that loads the right adapter
         # according to the model_name available in this context.  This ensures
         # the right weights are available.
+        if not _LOCAL_MODELS_AVAILABLE:
+            raise ImportError(
+                "Local model dependencies (torch, transformers, fastchat) are not installed. "
+                "Install them with: pip install livebench[local-models]"
+            )
         @torch.inference_mode()
         def generate_stream_peft(
             model,

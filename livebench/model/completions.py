@@ -5,13 +5,17 @@ import time
 import traceback
 from typing import Protocol, cast, Any
 import httpx
+import threading
 
 from openai import Stream
 from openai.types.chat import ChatCompletionChunk, ChatCompletion
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, wait_fixed, wait_incrementing
+from giga import GigaChat
 
 logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 
+_GIGA_CLIENT = None
+_GIGA_LOCK = threading.Lock()
 
 logger = logging.getLogger(__name__)
 
@@ -613,6 +617,39 @@ def chat_completion_deepinfra(model: str, messages: Conversation, temperature: f
 
     return ai_message['content'], total_tokens
 
+@retry(
+    stop=stop_after_attempt(API_MAX_RETRY),
+    wait=wait_fixed(API_RETRY_SLEEP_MIN),
+    retry=retry_if_exception_type(Exception),
+    after=retry_log,
+    retry_error_callback=retry_fail,
+)
+def chat_completion_giga(model: str, messages: Conversation, temperature: float, max_tokens: int, model_api_kwargs: API_Kwargs | None = None, api_dict: dict[str, str] | None = None, stream: bool = False) -> tuple[str, int]:
+    global _GIGA_CLIENT
+
+    with _GIGA_LOCK:
+        if _GIGA_CLIENT is None:
+            logger.info(f"Creating global GigaChat client (singleton)...")
+            _GIGA_CLIENT = GigaChat()
+            logger.info(f"GigaChat client created successfully")
+    client = _GIGA_CLIENT
+    kwargs = {
+        'model': model,
+        'messages': messages,
+        'temperature': temperature,
+        'max_tokens': max_tokens,
+    }
+
+    if model_api_kwargs:
+        kwargs.update(model_api_kwargs)
+
+    response = client.chat(**kwargs)
+
+    content = response['choices'][0]['message']['content']
+    num_tokens = response.get('usage', {}).get('completion_tokens', len(content.split()))
+
+    return content, num_tokens
+
 def get_api_function(provider_name: str) -> ModelAPI:
     if provider_name == 'openai':
         return chat_completion_openai
@@ -630,5 +667,7 @@ def get_api_function(provider_name: str) -> ModelAPI:
         return chat_completion_aws
     elif provider_name == 'deepinfra':
         return chat_completion_deepinfra
+    elif provider_name == 'giga':
+        return chat_completion_giga
     else:
         return chat_completion_openai

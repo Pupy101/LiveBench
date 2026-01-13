@@ -7,10 +7,17 @@ This script consolidates the functionality of the bash scripts into a single Pyt
 import argparse
 import os
 import time
-import libtmux
 import subprocess
 from dataclasses import dataclass
 import dotenv
+
+# Optional import for tmux mode
+try:
+    import libtmux
+    _LTMUX_AVAILABLE = True
+except ImportError:
+    _LTMUX_AVAILABLE = False
+    libtmux = None
 
 dotenv.load_dotenv()
 
@@ -133,6 +140,10 @@ def setup_tmux_session(session_name: str, benchmarks: list[str], commands: list[
         commands: List of commands to run for each benchmark
         venv_path: Optional path to virtual environment to activate
     """
+    if not _LTMUX_AVAILABLE:
+        raise ImportError(
+            "libtmux is not installed. Install it with: pip install libtmux"
+        )
     print(f"\nSetting up tmux session '{session_name}' for benchmarks: {', '.join(benchmarks)}")
     
     # Initialize tmux server

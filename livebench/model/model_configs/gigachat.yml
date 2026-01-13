@@ -1,0 +1,7 @@
+display_name: GigaChat
+api_name:
+  giga: GigaChat
+default_provider: giga
+aliases:
+  - gigachat
+  - GigaChat

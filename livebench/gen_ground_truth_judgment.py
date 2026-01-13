@@ -303,7 +303,7 @@ def gen_judgments(
     else:
         models = model_list
 
-    models = [get_model_config(m).display_name for m in models]
+    models = [get_model_config(m).display_name.lower() for m in models]
 
     print('models:', models)
 
@@ -579,6 +579,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--only-incorrect", action="store_true", default=False,
         help="When used with --resume, only re-evaluate questions that previously scored 0. Requires --resume to be enabled."
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        default=None,
+        help="Path to output judgment file. If not provided, will use default location: data/{bench_name}/model_judgment/ground_truth_judgment.jsonl",
+    )
+    parser.add_argument(
+        "--answer-file",
+        type=str,
+        default=None,
+        help="Path to directory containing model answer files. If not provided, will use default location: data/{bench_name}/model_answer/",
     )
     args = parser.parse_args()
 
